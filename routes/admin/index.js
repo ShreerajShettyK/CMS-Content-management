@@ -5,6 +5,7 @@ const router = express.Router();
 const {faker} = require('@faker-js/faker');
 const {userAuthenticated} = require('../../helpers/authentication')
 const path = require('path');
+const download = require('image-downloader');
 
 router.all('/*',userAuthenticated, (req,res,next)=>{
     req.app.locals.layout='admin';
@@ -14,14 +15,15 @@ router.all('/*',userAuthenticated, (req,res,next)=>{
 
 
 router.get('/',(req,res)=>{
-    Category.findOne({_id:'64b56b153eb0f28c6e0f4141'}).then(category=>{
-        res.render('admin/index',{category:category});
+    Category.find({}).then(categories=>{
+        res.render('admin/index',{categories:categories});
     
     })
 });
 
-router.post('/generate-fake-posts',(req,res)=>{
-    for(let i = 0; i < req.body.amount ; i++){
+router.post('/generate-fake-posts', async (req,res)=>{
+    const amount = req.body.amount;
+    for(let i = 0; i < amount ; i++){
 
         let post= new Post();
         
@@ -33,32 +35,56 @@ router.post('/generate-fake-posts',(req,res)=>{
         post.allowComments=Boolean(faker.number.bigInt(1n));
         post.body=faker.lorem.sentence();
         const value = faker.image.url();
-        console.log(value);
+        //console.log(value);
         
-        const download = require('image-downloader');
+        
 
         const options = {
             url: value,
             dest: '../../public/uploads/'+post.title+'.jpg',  // will be saved to /path/to/dest/image.jpg
         };
     
-        download.image(options)
+        await download.image(options)
         .then(({ filename }) => {
-            console.log('Saved to', filename); // saved to /path/to/dest/image.jpg
+            //console.log('Saved to', filename); // saved to /path/to/dest/image.jpg
         })
         .catch((err) => console.error(err));
 
-        post.category= '64b56b153eb0f28c6e0f4141';
-        
+        await Category.countDocuments({}).then(async count => {
+            if (count>=1) {
+                await Category.find({}).then(docs => {
+                    // if (err) {
+                    //     console.error('Error while fetching documents:', err);
+                    //   }
+
+                      // Extract and log the IDs of the documents
+                    //   const catId = docs.map(doc => doc._id);
+                    //   console.log(catId[0]);
+                    const catId = docs[0]._id;
+                    console.log(catId); 
+                    post.category= catId;
+                      
+
+                })
+    
+            }
+            else{
+                //console.log(count);
+                const newCategory= new Category({
+                    name:"Angular",
+                });
+                await newCategory.save().then(savedCat=>{
+                    post.category= savedCat._id;
+                });
+            }
+            
+        });
+      
+
         post.file=post.title.concat('.',"jpg");
-        // let file=post.title;
-        // let filename=file.name;
-        // fs.mv('./public/uploads/'+filename,(err)=>{
-        //     if(err) throw err;
-        // })
 
-        post.save().then(savedPost=>{
-
+        await post.save().then(savedPost=>{
+            
         });
         
     }
