@@ -94,6 +94,6 @@ app.use('/admin/posts',posts);
 app.use('/admin/categories',categories);
 
 
-app.listen(4500,()=>{
+app.listen(process.env.PORT || 4500 ,()=>{
     console.log('Listening to port 4500');
 });
