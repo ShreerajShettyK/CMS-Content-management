@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
+    "start": "node app.js",
+    "build": "tsc"
   },
   "author": "Shreeraj Shetty",
   "license": "ISC",
@@ -31,6 +32,7 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.0.2"
+    "@faker-js/faker": "^8.0.2",
+    "typescript": "^5.1.6"
   }
 }
